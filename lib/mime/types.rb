@@ -1,12 +1,8 @@
 # coding: utf-8
 require "mime/type"
+require "mime/invalid_content_type"
 
-# The namespace for MIME applications, tools, and libraries.
 module MIME
-  # Reflects a MIME Content-Type which is in invalid format (e.g., it isn't
-  # in the form of type/subtype).
-  class InvalidContentType < RuntimeError; end
-
   # = MIME::Types
   # MIME types are used in MIME-compliant communications, as in e-mail or
   # HTTP traffic, to indicate the type of content which is transmitted.
