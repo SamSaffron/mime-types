@@ -2,6 +2,8 @@
 
 # The namespace for MIME applications, tools, and libraries.
 module MIME
+  STRING_POOL = Hash.new { |h,k| k.dup.freeze; h[k] = k }
+
   # Reflects a MIME Content-Type which is in invalid format (e.g., it isn't
   # in the form of type/subtype).
   class InvalidContentType < RuntimeError; end
@@ -593,7 +595,9 @@ module MIME
     end
   
     def each
-     defined_types.each { |t| yield t }
+      return enum_for(:each) unless block_given?
+
+      defined_types.each { |t| yield t }
     end
 
     @__types__ = self.new(VERSION)
@@ -826,6 +830,8 @@ module MIME
       end
 
       def each
+        return enum_for(:each) unless block_given?
+
         @__types__.each {|t| yield t }
       end
 
