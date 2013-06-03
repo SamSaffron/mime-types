@@ -1,4 +1,5 @@
 # coding: utf-8
+require "mime/type"
 
 # The namespace for MIME applications, tools, and libraries.
 module MIME
@@ -57,16 +58,9 @@ module MIME
   #             http://www.ltsw.se/knbase/internet/mime.htp
   #
   class Types
-    # The released version of Ruby MIME::Types
-    VERSION = MIME::Type::VERSION
-
-      # The data version.
-    attr_reader :data_version
-
-    def initialize(data_version = nil)
+    def initialize
       @type_variants    = Hash.new { |h, k| h[k] = [] }
       @extension_index  = Hash.new { |h, k| h[k] = [] }
-      @data_version = data_version
     end
 
     def add_type_variant(mime_type) #:nodoc:
@@ -94,7 +88,7 @@ module MIME
       defined_types.each { |t| yield t }
     end
 
-    @__types__ = self.new(VERSION)
+    @__types__ = self.new
 
     # Returns a list of MIME::Type objects, which may be empty. The optional
     # flag parameters are :complete (finds only complete MIME::Type objects)
@@ -291,7 +285,7 @@ module MIME
             t.obsolete    = obsolete
             t.registered  = false if unregistered
             t.docs        = docs
-            t.url         = urls.map
+            t.url         = urls
           end
 
           mime.add(mime_type)

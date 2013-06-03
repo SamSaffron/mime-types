@@ -1,27 +1,7 @@
 # coding: utf-8
 
 module MIME
-  # The definition of one MIME content-type.
-  #
-  # == Usage
-  #  require 'mime/types'
-  #
-  #  plaintext = MIME::Types['text/plain']
-  #  print plaintext.media_type           # => 'text'
-  #  print plaintext.sub_type             # => 'plain'
-  #
-  #  puts plaintext.extensions.join(" ")  # => 'asc txt c cc h hh cpp'
-  #
-  #  puts plaintext.encoding              # => 8bit
-  #  puts plaintext.binary?               # => false
-  #  puts plaintext.ascii?                # => true
-  #  puts plaintext == 'text/plain'       # => true
-  #  puts MIME::Type.simplified('x-appl/x-zip') # => 'appl/zip'
-  #
   class Type
-    # The released version of Ruby MIME::Types
-    VERSION = '1.23'
-
     include Comparable
 
     MEDIA_TYPE_RE = %r{([-\w.+]+)/([-\w.+]*)}o
