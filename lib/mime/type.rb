@@ -1,6 +1,9 @@
+require "mime/pooled_attr_accessor"
+
 module MIME
   class Type
     include Comparable
+    extend PooledAttrAccessor
 
     MEDIA_TYPE_RE = %r{([-\w.+]+)/([-\w.+]*)}o
     UNREG_RE      = %r{[Xx]-}o
@@ -91,27 +94,31 @@ module MIME
     #
     #   text/plain        => text/plain
     #   x-chemical/x-pdb  => x-chemical/x-pdb
-    attr_reader :content_type
+    pooled_attr_accessor :content_type, private_writer: true
     # Returns the media type of the simplified MIME type.
     #
     #   text/plain        => text
     #   x-chemical/x-pdb  => chemical
-    attr_reader :media_type
+    pooled_attr_accessor :media_type, private_writer: true
+
     # Returns the media type of the unmodified MIME type.
     #
     #   text/plain        => text
     #   x-chemical/x-pdb  => x-chemical
-    attr_reader :raw_media_type
+    pooled_attr_accessor :raw_media_type, private_writer: true
+
     # Returns the sub-type of the simplified MIME type.
     #
     #   text/plain        => plain
     #   x-chemical/x-pdb  => pdb
-    attr_reader :sub_type
+    pooled_attr_accessor :sub_type, private_writer: true
+
     # Returns the media type of the unmodified MIME type.
     #
     #   text/plain        => plain
     #   x-chemical/x-pdb  => x-pdb
-    attr_reader :raw_sub_type
+    pooled_attr_accessor :raw_sub_type, private_writer: true
+
     # The MIME types main- and sub-label can both start with <tt>x-</tt>,
     # which indicates that it is a non-registered name. Of course, after
     # registration this flag can disappear, adds to the confusing
@@ -120,14 +127,15 @@ module MIME
     #
     #   text/plain        => text/plain
     #   x-chemical/x-pdb  => chemical/pdb
-    attr_reader :simplified
+    pooled_attr_accessor :simplified, private_writer: true
+
     # The list of extensions which are known to be used for this MIME::Type.
     # Non-array values will be coerced into an array with #to_a. Array
     # values will be flattened and +nil+ values removed.
-    attr_accessor :extensions
-    remove_method :extensions= ;
-    def extensions=(ext) #:nodoc:
-      @extensions = [ext].flatten.compact
+    attr_reader :extensions
+
+    def extensions=(ext)
+      @extensions = [ext].flatten.compact.map { |e| ValuePool[e] }
     end
 
     # The encoding (7bit, 8bit, quoted-printable, or base64) required to
@@ -140,13 +148,13 @@ module MIME
     # If the encoding is not provided on construction, this will be either
     # 'quoted-printable' (for text/* media types) and 'base64' for eveything
     # else.
-    attr_accessor :encoding
-    remove_method :encoding= ;
+    attr_reader :encoding
+
     def encoding=(enc) #:nodoc:
       if enc.nil? or enc == :default
-        @encoding = self.default_encoding
+        @encoding = ValuePool[default_encoding]
       elsif enc =~ ENCODING_RE
-        @encoding = enc
+        @encoding = ValuePool[enc]
       else
         raise ArgumentError, "The encoding must be nil, :default, base64, 7bit, 8bit, or quoted-printable."
       end
@@ -154,28 +162,34 @@ module MIME
 
     # The regexp for the operating system that this MIME::Type is specific
     # to.
-    attr_accessor :system
-    remove_method :system= ;
+    attr_reader :system
+
     def system=(os) #:nodoc:
-      if os.nil? or os.kind_of?(Regexp)
-        @system = os
-      else
-        @system = %r|#{os}|
-      end
+      @system = ValuePool[
+        if os.nil? or os.kind_of?(Regexp)
+          os
+        else
+          %r|#{os}|
+        end
+      ]
     end
+
     # Returns the default encoding for the MIME::Type based on the media
     # type.
     attr_reader :default_encoding
-    remove_method :default_encoding
+
+    TEXT = "text".freeze
+    QUOTED_PRINTABLE = "quoted-printable".freeze
+    BASE64 = "base64".freeze
+    private_constant :TEXT, :QUOTED_PRINTABLE, :BASE64
+
     def default_encoding
-      (@media_type == 'text') ? 'quoted-printable' : 'base64'
+      (@media_type == TEXT) ? QUOTED_PRINTABLE : BASE64
     end
 
     # Returns the media type or types that should be used instead of this
     # media type, if it is obsolete. If there is no replacement media type,
     # or it is not obsolete, +nil+ will be returned.
-    attr_reader :use_instead
-    remove_method :use_instead
     def use_instead
       return nil unless @obsolete
       @use_instead
@@ -185,14 +199,15 @@ module MIME
     def obsolete?
       @obsolete ? true : false
     end
+
     # Sets the obsolescence indicator for this media type.
     attr_writer :obsolete
 
     # The documentation for this MIME::Type. Documentation about media
     # types will be found on a media type definition as a comment.
     # Documentation will be found through #docs.
-    attr_accessor :docs
-    remove_method :docs= ;
+    attr_reader :docs
+
     def docs=(d)
       if d
         a = d.scan(%r{use-instead:#{MEDIA_TYPE_RE}})
@@ -200,15 +215,20 @@ module MIME
         if a.empty?
           @use_instead = nil
         else
-          @use_instead = a.map { |el| "#{el[0]}/#{el[1]}" }
+          @use_instead = a.map { |el| ValuePool["#{el[0]}/#{el[1]}"] }
         end
       end
-      @docs = d
+      @docs = ValuePool[d]
     end
 
     # The encoded URL list for this MIME::Type. See #urls for more
     # information.
-    attr_accessor :url
+    attr_reader :url
+
+    def url=(url)
+      @url = url.is_a?(Array) ? url.map { |u| ValuePool[u] } : url
+    end
+
     # The decoded URL list for this MIME::Type.
     # The special URL value IANA will be translated into:
     #   http://www.iana.org/assignments/media-types/<mediatype>/<subtype>
@@ -380,14 +400,14 @@ module MIME
         raise InvalidContentType, "Invalid Content-Type provided ('#{content_type}')"
       end
 
-      @content_type = content_type
-      @raw_media_type = matchdata.captures[0]
-      @raw_sub_type = matchdata.captures[1]
+      self.content_type = content_type
+      self.raw_media_type = matchdata.captures[0]
+      self.raw_sub_type = matchdata.captures[1]
 
-      @simplified = MIME::Type.simplified(@content_type)
+      self.simplified = MIME::Type.simplified(@content_type)
       matchdata = MEDIA_TYPE_RE.match(@simplified)
-      @media_type = matchdata.captures[0]
-      @sub_type = matchdata.captures[1]
+      self.media_type = matchdata.captures[0]
+      self.sub_type = matchdata.captures[1]
 
       self.extensions   = nil
       self.encoding     = :default
@@ -418,7 +438,7 @@ module MIME
     # formats. This method returns +true+ when the MIME type encoding is set
     # to <tt>base64</tt>.
     def binary?
-      @encoding == 'base64'
+      @encoding == BASE64
     end
 
     # MIME types can be specified to be sent across a network in particular
