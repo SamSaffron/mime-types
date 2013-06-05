@@ -11,15 +11,6 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/charliesome/mime-types"
   s.licenses = ["MIT", "Artistic 2.0", "GPL-2"]
 
-  s.add_development_dependency(%q<minitest>, ["~> 4.7"])
-  s.add_development_dependency(%q<rdoc>, ["~> 4.0"])
-  s.add_development_dependency(%q<hoe-bundler>, ["~> 1.2"])
-  s.add_development_dependency(%q<hoe-doofus>, ["~> 1.0"])
-  s.add_development_dependency(%q<hoe-gemspec2>, ["~> 1.1"])
-  s.add_development_dependency(%q<hoe-git>, ["~> 1.5"])
-  s.add_development_dependency(%q<hoe-rubygems>, ["~> 1.0"])
-  s.add_development_dependency(%q<hoe-travis>, ["~> 1.2"])
-  s.add_development_dependency(%q<nokogiri>, ["~> 1.5"])
-  s.add_development_dependency(%q<rake>, ["~> 10.0"])
-  s.add_development_dependency(%q<hoe>, ["~> 3.6"])
+  s.add_development_dependency("minitest", ["~> 4.7"])
+  s.add_development_dependency("rake", ["~> 10.0"])
 end
