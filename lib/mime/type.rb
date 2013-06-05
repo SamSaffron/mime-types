@@ -1,5 +1,3 @@
-# coding: utf-8
-
 module MIME
   class Type
     include Comparable

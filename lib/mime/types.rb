@@ -1,4 +1,3 @@
-# coding: utf-8
 require "mime/type"
 require "mime/invalid_content_type"
 
