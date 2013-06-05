@@ -11,6 +11,7 @@ module MIME
         instance_variable_set(ivar, ValuePool[val])
       end
       private writer if opts[:private_writer]
+      opts = nil
     end
   end
 end
