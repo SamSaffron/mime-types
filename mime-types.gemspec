@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
   s.files = `git ls-files`.split($/)
   s.homepage = "https://github.com/charliesome/mime-types"
   s.licenses = ["MIT", "Artistic 2.0", "GPL-2"]
+  s.add_dependency("lru_redux", ["~> 0.0.6"])
 
   s.add_development_dependency("minitest", ["~> 4.7"])
   s.add_development_dependency("rake", ["~> 10.0"])
